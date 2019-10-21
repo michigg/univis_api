@@ -1,14 +1,14 @@
 import logging
 import re
-from pyexpat import ExpatError
 from typing import List
 
 import requests
 import xmltodict
+from pyexpat import ExpatError
 
-from models.room_models import UnivISRoom
-from models.person_models import Person
 from models.lecture_models import Lecture
+from models.person_models import Person
+from models.room_models import UnivISRoom
 
 logger = logging.getLogger(__name__)
 UNIVIS_SEMESTER = "ws2019"
@@ -105,25 +105,3 @@ class UnivISLectureController(UnivISController):
 
     def get_lectures_sorted_by_starttime(self, lectures):
         return sorted(lectures, key=lambda lecture: lecture.get_first_term().starttime)
-
-
-class UnivISRoomController(UnivISController):
-    def __init__(self):
-        UnivISController.__init__(self)
-        self.univis_api_base_url = "http://univis.uni-bamberg.de/prg"
-
-    def _get_univis_api_url(self, building_key):
-        return f'{self.univis_api_base_url}?search=rooms&name={building_key}&show=xml'
-
-    def get_rooms(self, data: dict) -> List[UnivISRoom]:
-        return self.get_rooms_from_data(data['UnivIS']['Room']) if 'Room' in data['UnivIS'] else []
-
-    # def get_building_keys_rooms(self, building_key: str) -> List[UnivISRoom]:
-    #     data = self.load_page(self._get_univis_api_url(building_key))
-    #     rooms = self.get_rooms_from_data(data['UnivIS']['Room'])
-    #     return [room for room in rooms if building_key.lower() in room.building_key.lower()] if 'Room' in data[
-    #         'UnivIS'] else []
-
-    def get_tokens_rooms(self, token) -> List[UnivISRoom]:
-        data = self.load_page(self._get_univis_api_url(token))
-        return self.get_rooms(data) if data else []

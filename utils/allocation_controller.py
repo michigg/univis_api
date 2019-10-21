@@ -10,7 +10,7 @@ class UnivISAllocationController(UnivISController):
         UnivISController.__init__(self)
         self.univis_api_base_url = "http://univis.uni-bamberg.de/prg"
 
-    def _get_univis_api_url(self, start_date, end_date, start_time, end_time):
+    def _get_univis_api_url(self, start_date=None, end_date=None, start_time=None, end_time=None):
         params = {"search": "allocations", "show": "xml"}
         if start_date:
             params['start'] = start_date

@@ -1,13 +1,25 @@
 import datetime
 import json
+from enum import Enum
 
 from flask import Flask, request, jsonify
+from flask_caching import Cache
 
+from models.enums.building_key import CHOICES as BUILDING_KEY_CHOICES, BuildingKey
+from models.enums.faculty import CHOICES as FACULTY_CHOICES, Faculty
 from utils.allocation_controller import UnivISAllocationController
-from utils.controllers import UnivISLectureController, UnivISRoomController
+from utils.controllers import UnivISLectureController
+from utils.room_controller import UnivISRoomController
 
 API_V1_ROOT = "/api/v1/"
 app = Flask(__name__)
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
+
+def make_cache_key(*args, **kwargs):
+    path = request.path
+    args = str(hash(frozenset(request.args.items())))
+    return (path + args)
 
 
 @app.route(f'{API_V1_ROOT}/')
@@ -35,18 +47,33 @@ def lectures():
 
 
 @app.route(f'{API_V1_ROOT}rooms/', methods=['GET'])
+@cache.cached(timeout=86400, key_prefix=make_cache_key)
 def rooms():
     search_token = request.args.get('token', None)
-    if search_token:
-        univis_room_c = UnivISRoomController()
-        rooms = sorted(univis_room_c.get_tokens_rooms(token=search_token), key=lambda room: room.__str__())
-        room_dicts = [room.__dict__ for room in rooms]
-        return jsonify(room_dicts)
+    name = request.args.get('name', None)
+    long_name = request.args.get('token', None)
+    size = request.args.get('size', None)
+    id = request.args.get('id', None)
+    # TODO: all departments
+    # department = request.args.get('faculty', None)
+    faculty = request.args.get('faculty', None)
+    building_key = request.args.get('building_key', None)
+
+    univis_room_c = UnivISRoomController()
+    if search_token or name or long_name or size or id or faculty or building_key:
+        faculty_enum = get_enum(Faculty, faculty) if faculty else None
+        building_key_enum = get_enum(BuildingKey, building_key) if building_key else None
+
+        url = univis_room_c.get_univis_api_url(search_token, name, long_name, size, id, faculty_enum, building_key_enum)
+        rooms = univis_room_c.get_rooms(url)
     else:
-        return jsonify(status_code=400)
+        rooms = univis_room_c.get_rooms()
+    room_dicts = [room.__dict__ for room in rooms]
+    return jsonify(room_dicts)
 
 
 @app.route(f'{API_V1_ROOT}allocations/', methods=['GET'])
+@cache.cached(timeout=86400, key_prefix=make_cache_key)
 def allocations():
     start_date = request.args.get('start_date', None)
     end_date = request.args.get('end_date', None)
@@ -60,6 +87,21 @@ def allocations():
             datetime.date, datetime.datetime)) else o.isoformat(), indent=4)))
     else:
         return jsonify(status_code=400)
+
+
+@app.route(f'{API_V1_ROOT}faculties/', methods=['GET'])
+def faculties():
+    return jsonify(FACULTY_CHOICES)
+
+
+@app.route(f'{API_V1_ROOT}building-keys/', methods=['GET'])
+def building_keys():
+    return jsonify(BUILDING_KEY_CHOICES)
+
+
+def get_enum(enum, key: str):
+    result = [member for name, member in enum.__members__.items() if str(member.name).lower() == key.lower()]
+    return result[0] if result else None
 
 
 if __name__ == '__main__':

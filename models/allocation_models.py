@@ -1,12 +1,3 @@
-from enum import Enum
-
-
-class Department(Enum):
-    WIAI = "Fakultät Wirtschaftsinformatik"
-    GUK = "Fakultät Geistes- und Kulturwissenschaften"
-
-
-
 class Allocation:
     def __init__(self, univis_allocation: dict):
         self.univis_key = univis_allocation.get('@key', None)
