@@ -9,10 +9,17 @@ from models.enums.faculty import CHOICES as FACULTY_CHOICES, Faculty
 from utils.allocation_controller import UnivISAllocationController
 from utils.controllers import UnivISLectureController
 from utils.room_controller import UnivISRoomController
+import os
+
+PROD_MODE = os.environ.get("PROD_MODE", "False") == "TRUE"
+CACHE_REDIS_URL = os.environ.get("CACHE_REDIS_URL", None)
 
 API_V1_ROOT = "/api/v1/"
 app = Flask(__name__)
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+if PROD_MODE:
+    cache = Cache(app, config={'CACHE_TYPE': 'redis', 'CACHE_REDIS_URL': CACHE_REDIS_URL})
+else:
+    cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 
 def make_cache_key(*args, **kwargs):
