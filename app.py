@@ -57,15 +57,17 @@ def rooms():
     # TODO: all departments
     # department = request.args.get('faculty', None)
     faculty = request.args.get('faculty', None)
-    building_key = request.args.get('building_key', None)
+    building_keys = request.args.getlist('building_keys', None)
 
     univis_room_c = UnivISRoomController()
-    if search_token or name or long_name or size or id or faculty or building_key:
+    if search_token or name or long_name or size or id or faculty or building_keys:
         faculty_enum = get_enum(Faculty, faculty) if faculty else None
-        building_key_enum = get_enum(BuildingKey, building_key) if building_key else None
-
-        url = univis_room_c.get_univis_api_url(search_token, name, long_name, size, id, faculty_enum, building_key_enum)
-        rooms = univis_room_c.get_rooms(url)
+        building_key_enums = [get_enum(BuildingKey, building_key) for building_key in building_keys if building_key]
+        rooms = []
+        for building_key_enum in building_key_enums:
+            url = univis_room_c.get_univis_api_url(search_token, name, long_name, size, id, faculty_enum,
+                                                   building_key_enum)
+            rooms.extend(univis_room_c.get_rooms(url))
     else:
         rooms = univis_room_c.get_rooms()
     room_dicts = [room.__dict__ for room in rooms]
