@@ -57,7 +57,7 @@ def lectures():
 def rooms():
     search_token = request.args.get('token', None)
     name = request.args.get('name', None)
-    long_name = request.args.get('token', None)
+    long_name = request.args.get('long_name', None)
     size = request.args.get('size', None)
     id = request.args.get('id', None)
     # TODO: all departments
@@ -70,9 +70,15 @@ def rooms():
         faculty_enum = get_enum(Faculty, faculty) if faculty else None
         building_key_enums = [get_enum(BuildingKey, building_key) for building_key in building_keys if building_key]
         rooms = []
-        for building_key_enum in building_key_enums:
+        if building_key_enums:
+            for building_key_enum in building_key_enums:
+                url = univis_room_c.get_univis_api_url(search_token, name, long_name, size, id, faculty_enum,
+                                                       building_key_enum)
+                rooms.extend(univis_room_c.get_rooms(url))
+        else:
             url = univis_room_c.get_univis_api_url(search_token, name, long_name, size, id, faculty_enum,
-                                                   building_key_enum)
+                                                   None)
+            print(url)
             rooms.extend(univis_room_c.get_rooms(url))
     else:
         rooms = univis_room_c.get_rooms()
