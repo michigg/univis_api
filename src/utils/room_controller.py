@@ -51,6 +51,15 @@ class UnivISRoomController(UnivISController):
                 rooms.extend(self.get_tokens_rooms(key))
             return list(set(rooms))
 
+    def get_room(self, id):
+        url = self.get_univis_api_url(id=id)
+        data = self.load_page(url)
+        if 'Room' in data['UnivIS']:
+            room = data['UnivIS']['Room']
+            self.is_a_room(room)
+            return UnivISRoom(room)
+        return None
+
     # def get_building_keys_rooms(self, building_key: str) -> List[UnivISRoom]:
     #     data = self.load_page(self._get_univis_api_url(building_key))
     #     rooms = self.get_rooms_from_data(data['UnivIS']['Room'])
