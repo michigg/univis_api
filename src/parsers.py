@@ -8,12 +8,13 @@ lectures_parser.add_argument('search_token', required=True,
                              help='part of a lecture name')
 
 rooms_parser = reqparse.RequestParser()
-rooms_parser.add_argument('search_token',
+rooms_parser.add_argument('token',
                           type=str,
-                          help='part of a room short name (e.g. WE5/01.006)')
+                          help='part of a room short name (e.g. WE5/01.006)'
+                          )
 rooms_parser.add_argument('name',
                           type=str,
-                          help='rooms short name (e.g. WE5/01.006)')
+                          help='rooms short name (e.g. WE5/01.006)'),
 rooms_parser.add_argument('long_name',
                           type=str,
                           help='rooms name (e.g. Seminarraum)')
@@ -25,6 +26,7 @@ rooms_parser.add_argument('faculty',
                           help='rooms faculty univis name')
 rooms_parser.add_argument('building_keys',
                           type=List[str],
+                          action='split',
                           help='rooms filtered by list of building_keys')
 
 allocations_parser = reqparse.RequestParser()

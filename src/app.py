@@ -54,9 +54,12 @@ class Room(Resource):
         """
         returns room by id (beta)
         """
+        args = {"id": id}
+
         univis_room_c = UnivISRoomController()
-        room = univis_room_c.get_room(id=id)
-        return jsonify(room.__dict__) if room else jsonify(status_code=400)
+        url = univis_room_c.get_url(args=args)
+        rooms = univis_room_c.get_univis_data_rooms([url])
+        return jsonify(rooms[0].__dict__) if rooms else jsonify(status_code=400)
 
 
 @api.route(f'{API_V1_ROOT}rooms/')
@@ -68,34 +71,21 @@ class Rooms(Resource):
         """
         returns univis rooms
         """
-        search_token = request.args.get('token', None)
-        name = request.args.get('name', None)
-        long_name = request.args.get('long_name', None)
-        size = request.args.get('size', None)
-        id = request.args.get('id', None)
-        # TODO: all departments
-        # department = request.args.get('faculty', None)
-        faculty = request.args.get('faculty', None)
-        building_keys = request.args.getlist('building_keys', None)
+        args = parsers.rooms_parser.parse_args()
 
         univis_room_c = UnivISRoomController()
-        if search_token or name or long_name or size or id or faculty or building_keys:
-            faculty_enum = get_enum(Faculty, faculty) if faculty else None
-            building_key_enums = [get_enum(BuildingKey, building_key) for building_key in building_keys if building_key]
-            rooms = []
-            if building_key_enums:
-                for building_key_enum in building_key_enums:
-                    url = univis_room_c.get_univis_api_url(search_token, name, long_name, size, id, faculty_enum,
-                                                           building_key_enum)
-                    rooms.extend(univis_room_c.get_rooms(url))
-            else:
-                url = univis_room_c.get_univis_api_url(search_token, name, long_name, size, id, faculty_enum,
-                                                       None)
-                rooms.extend(univis_room_c.get_rooms(url))
-        else:
-            rooms = univis_room_c.get_rooms()
+        urls = univis_room_c.get_all_rooms_urls() if self.is_param_list_empty(args) else [
+            univis_room_c.get_url(args=args)]
+        rooms = univis_room_c.get_univis_data_rooms(urls=urls)
         room_dicts = [room.__dict__ for room in rooms]
         return jsonify(room_dicts)
+
+    def is_param_list_empty(self, args):
+        empty_params = True
+        for key in args:
+            if args[key]:
+                empty_params = False
+        return empty_params
 
 
 @api.route(f'{API_V1_ROOT}allocations/')
@@ -137,11 +127,6 @@ class BuildingKeys(Resource):
         returns current supported building keys
         """
         return jsonify(BUILDING_KEY_CHOICES)
-
-
-def get_enum(enum, key: str):
-    result = [member for name, member in enum.__members__.items() if str(member.name).lower() == key.lower()]
-    return result[0] if result else None
 
 
 if __name__ == '__main__':
