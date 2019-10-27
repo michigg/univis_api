@@ -3,7 +3,6 @@ from typing import List
 
 from models.enums.lecture_type import LectureType
 from models.room_models import UnivISRoom
-from models.person_models import Person
 
 
 class LectureTerm:

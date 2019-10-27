@@ -1,9 +1,11 @@
 import os
+from pprint import pprint
 from typing import List
 from urllib.parse import urlencode, quote_plus
 
 from models.enums.building_key import BuildingKey
 from models.enums.faculty import Faculty
+from models.person_models import UnivISPerson
 from models.room_models import UnivISRoom
 from utils.controllers import UnivISController
 
@@ -37,6 +39,7 @@ class UnivISRoomController(UnivISController):
             building_key_strings = [building_key.value for building_key in building_key_enums]
             building_keys_str = "|".join(building_key_strings) if building_key_strings else ""
             params['name'] = building_keys_str
+        pprint(f'{self.univis_api_base_url}?{urlencode(params, quote_via=quote_plus)}')
         return f'{self.univis_api_base_url}?{urlencode(params, quote_via=quote_plus)}'
 
     def get_univis_data_rooms(self, urls: List[str]) -> List[UnivISRoom]:
@@ -50,20 +53,28 @@ class UnivISRoomController(UnivISController):
         return [self.get_url({"token": key}) for key in UNIVIS_ROOM_KEYS]
 
     def _extract_rooms(self, univis_data: dict) -> List[UnivISRoom]:
-        univis_rooms = self._get_univis_rooms_from_univis_data(univis_data)
-
+        univis_rooms = self._get_univis_rooms_from_univis_data(univis_data=univis_data)
+        univis_persons = self._get_univis_persons_from_univis_data(univis_data=univis_data)
+        pprint(univis_persons)
+        rooms = []
         if type(univis_rooms) is list:
-            rooms = []
+            persons = []
+            for univis_person in univis_persons:
+                person = self._extract_person(univis_person)
+                if person:
+                    persons.append(person)
+            persons_map = self.get_univis_key_dict(persons)
+            pprint(persons_map)
             for univis_room in univis_rooms:
-                room = self._extract_room(univis_room)
+                room = self._extract_room(univis_room, persons_map)
                 if room:
                     rooms.append(room)
-            return rooms
         else:
-            return [self._extract_room(univis_rooms)]
+            rooms = [self._extract_room(univis_rooms)]
+        return rooms
 
-    def _extract_room(self, univis_room: dict) -> UnivISRoom or None:
-        return UnivISRoom(univis_room) if self.is_a_room(univis_room) else None
+    def _extract_room(self, univis_room: dict, persons_map: dict) -> UnivISRoom or None:
+        return UnivISRoom(univis_room, persons_map) if self.is_a_room(univis_room) else None
 
     def _get_univis_rooms_from_univis_data(self, univis_data: dict) -> List[dict] or None:
         if 'UnivIS' in univis_data:
@@ -73,3 +84,11 @@ class UnivISRoomController(UnivISController):
     def get_enum(self, enum, key: str):
         result = [member for name, member in enum.__members__.items() if str(member.name).lower() == key.lower()]
         return result[0] if result else None
+
+    def _extract_person(self, univis_person: dict) -> UnivISPerson or None:
+        return UnivISPerson(univis_person)
+
+    def _get_univis_persons_from_univis_data(self, univis_data: dict) -> List[dict] or None:
+        if 'UnivIS' in univis_data:
+            return univis_data['UnivIS']['Person'] if 'Person' in univis_data['UnivIS'] else None
+        return None

@@ -7,11 +7,14 @@ import xmltodict
 from pyexpat import ExpatError
 
 from models.lecture_models import Lecture
-from models.person_models import Person
 from models.room_models import UnivISRoom
 
 logger = logging.getLogger(__name__)
 UNIVIS_SEMESTER = "ws2019"
+
+
+class UnvISPerson(object):
+    pass
 
 
 class UnivISController:
@@ -25,12 +28,15 @@ class UnivISController:
         except ExpatError:
             return None
 
-    def get_persons(self, data: dict) -> List[Person]:
-        return [Person(person) for person in data['UnivIS']['Person'] if 'Person' in data['UnivIS']]
+    # def get_persons(self, data: dict) -> List[UnvISPerson]:
+    #     return [UnvISPerson(person) for person in data['UnivIS']['Person'] if 'Person' in data['UnivIS']]
 
     def is_a_room(self, room: dict):
         try:
-            return re.match(self.room_regex, room['short'])
+            if 'short' in room:
+                return re.match(self.room_regex, room['short'])
+            else:
+                return re.match(self.room_regex, room['office'])
         except TypeError:
             return False
 
@@ -40,9 +46,9 @@ class UnivISController:
             map[object.univis_key] = object
         return map
 
-    def get_rooms_from_data(self, data: List):
-        logger.error([self.is_a_room(room) for room in data])
-        return [UnivISRoom(room) for room in data if self.is_a_room(room)]
+    # def get_rooms_from_data(self, data: List):
+    #     logger.error([self.is_a_room(room) for room in data])
+    #     return [UnivISRoom(room) for room in data if self.is_a_room(room)]
 
 
 class UnivISLectureController(UnivISController):

@@ -77,8 +77,9 @@ class Rooms(Resource):
         urls = univis_room_c.get_all_rooms_urls() if self.is_param_list_empty(args) else [
             univis_room_c.get_url(args=args)]
         rooms = univis_room_c.get_univis_data_rooms(urls=urls)
-        room_dicts = [room.__dict__ for room in rooms]
-        return jsonify(room_dicts)
+        # room_dicts = [room.__dict__ for room in rooms]
+        return jsonify(json.loads(json.dumps(rooms, default=lambda o: o.__dict__ if not isinstance(o, (
+                datetime.date, datetime.datetime)) else o.isoformat(), indent=4)))
 
     def is_param_list_empty(self, args):
         empty_params = True
