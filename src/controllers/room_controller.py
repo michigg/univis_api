@@ -7,7 +7,7 @@ from models.enums.building_key import BuildingKey
 from models.enums.faculty import Faculty
 from models.person_models import UnivISPerson
 from models.room_models import UnivISRoom
-from utils.controllers import UnivISController
+from controllers.controllers import UnivISController
 
 UNIVIS_ROOM_KEYS = os.environ.get("UNIVIS_ROOM_KEYS").split(",")
 
@@ -39,7 +39,6 @@ class UnivISRoomController(UnivISController):
             building_key_strings = [building_key.value for building_key in building_key_enums]
             building_keys_str = "|".join(building_key_strings) if building_key_strings else ""
             params['name'] = building_keys_str
-        pprint(f'{self.univis_api_base_url}?{urlencode(params, quote_via=quote_plus)}')
         return f'{self.univis_api_base_url}?{urlencode(params, quote_via=quote_plus)}'
 
     def get_univis_data_rooms(self, urls: List[str]) -> List[UnivISRoom]:
@@ -85,10 +84,3 @@ class UnivISRoomController(UnivISController):
         result = [member for name, member in enum.__members__.items() if str(member.name).lower() == key.lower()]
         return result[0] if result else None
 
-    def _extract_person(self, univis_person: dict) -> UnivISPerson or None:
-        return UnivISPerson(univis_person)
-
-    def _get_univis_persons_from_univis_data(self, univis_data: dict) -> List[dict] or None:
-        if 'UnivIS' in univis_data:
-            return univis_data['UnivIS']['Person'] if 'Person' in univis_data['UnivIS'] else None
-        return None

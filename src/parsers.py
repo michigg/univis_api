@@ -38,3 +38,21 @@ allocations_parser.add_argument('start_time', type=inputs.regex('^(?:[01]\d|2[01
                                 help='time from which allocations are to be searched for (format:  %H:%M)')
 allocations_parser.add_argument('end_time', type=inputs.regex('^(?:[01]\d|2[0123]):(?:[012345]\d)$'),
                                 help='time to which allocations are to be searched for (format:  %H:%M)')
+
+persons_parser = reqparse.RequestParser()
+persons_parser.add_argument('token',
+                            type=str,
+                            help='part of a full name'
+                            )
+persons_parser.add_argument('full_name',
+                            type=str,
+                            help='the persons full name', )
+persons_parser.add_argument('first_name',
+                            type=str,
+                            help='the persons name')
+persons_parser.add_argument('last_name',
+                            type=str,
+                            help='the persons last name')
+persons_parser.add_argument('title',
+                            type=str,
+                            help='the persons title')

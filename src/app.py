@@ -1,5 +1,6 @@
 import datetime
 import json
+from pprint import pprint
 
 from flask import Flask, request, jsonify
 from flask_caching import Cache
@@ -7,11 +8,12 @@ from flask_restplus import Api, Resource
 
 import parsers
 from config import PROD_MODE, CACHE_REDIS_URL, API_V1_ROOT
-from models.enums.building_key import CHOICES as BUILDING_KEY_CHOICES, BuildingKey
-from models.enums.faculty import CHOICES as FACULTY_CHOICES, Faculty
-from utils.allocation_controller import UnivISAllocationController
-from utils.controllers import UnivISLectureController
-from utils.room_controller import UnivISRoomController
+from controllers.allocation_controller import UnivISAllocationController
+from controllers.controllers import UnivISLectureController
+from controllers.person_controller import UnivISPersonController
+from controllers.room_controller import UnivISRoomController
+from models.enums.building_key import CHOICES as BUILDING_KEY_CHOICES
+from models.enums.faculty import CHOICES as FACULTY_CHOICES
 
 app = Flask(__name__)
 api = Api(app=app, doc='/docs', version='1.0', title='Alternative UnivIS API',
@@ -77,9 +79,8 @@ class Rooms(Resource):
         urls = univis_room_c.get_all_rooms_urls() if self.is_param_list_empty(args) else [
             univis_room_c.get_url(args=args)]
         rooms = univis_room_c.get_univis_data_rooms(urls=urls)
-        # room_dicts = [room.__dict__ for room in rooms]
-        return jsonify(json.loads(json.dumps(rooms, default=lambda o: o.__dict__ if not isinstance(o, (
-                datetime.date, datetime.datetime)) else o.isoformat(), indent=4)))
+        return json.loads(json.dumps(rooms, default=lambda o: o.__dict__ if not isinstance(o, (
+            datetime.date, datetime.datetime)) else o.isoformat(), indent=4))
 
     def is_param_list_empty(self, args):
         empty_params = True
@@ -108,6 +109,53 @@ class Allocations(Resource):
             allocations = univis_alloc_c.get_filtered_allocations(start_date, end_date, start_time, end_time)
             return jsonify(json.loads(json.dumps(allocations, default=lambda o: o.__dict__ if not isinstance(o, (
                 datetime.date, datetime.datetime)) else o.isoformat(), indent=4)))
+        else:
+            return jsonify(status_code=400)
+
+
+@api.route(f'{API_V1_ROOT}persons/')
+class Persons(Resource):
+
+    @cache.cached(timeout=86400, key_prefix=make_cache_key)
+    @api.doc(parser=parsers.persons_parser)
+    def get(self):
+        """
+        returns univis rooms
+        """
+        args = parsers.persons_parser.parse_args()
+
+        univis_person_c = UnivISPersonController()
+        urls = None if self.is_param_list_empty(args) else [univis_person_c.get_url(args=args)]
+
+        if urls:
+            persons = univis_person_c.get_univis_data_persons(urls=urls)
+            return json.loads(json.dumps(persons, default=lambda o: o.__dict__ if not isinstance(o, (
+                datetime.date, datetime.datetime)) else o.isoformat(), indent=4))
+        else:
+            return jsonify(status_code=400)
+
+    def is_param_list_empty(self, args):
+        empty_params = True
+        for key in args:
+            if args[key]:
+                empty_params = False
+        return empty_params
+
+
+@api.route(f'{API_V1_ROOT}persons/<int:id>')
+class Person(Resource):
+    def get(self, id):
+        """
+        returns room by id (beta)
+        """
+        args = {"id": id}
+
+        univis_person_c = UnivISPersonController()
+        url = univis_person_c.get_url(args=args)
+        univis_persons = univis_person_c.get_univis_data_persons([url])
+        if univis_persons:
+            return json.loads(json.dumps(univis_persons[0], default=lambda o: o.__dict__ if not isinstance(o, (
+                datetime.date, datetime.datetime)) else o.isoformat(), indent=4))
         else:
             return jsonify(status_code=400)
 

@@ -6,10 +6,10 @@ from models.room_models import Room
 
 class UnivISPerson(UnivISBase):
     def __init__(self, univis_person: dict):
-        self.id = univis_person.get('id')
+        self.id = univis_person.get('id', None)
         self.univis_key = univis_person.get('@key')
-        self.first_name = univis_person.get('firstname')
-        self.last_name = univis_person.get('lastname')
+        self.first_name = univis_person.get('firstname', None)
+        self.last_name = univis_person.get('lastname', None)
         self.title = univis_person.get('atitle', None)
         self.gender = univis_person.get('gender', None)
         self.orgname = univis_person.get('orgname', None)

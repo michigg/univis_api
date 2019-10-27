@@ -1,7 +1,7 @@
 from typing import List
 from urllib.parse import urlencode, quote_plus
 
-from utils.controllers import UnivISController
+from controllers.controllers import UnivISController
 from models.allocation_models import Allocation
 
 
