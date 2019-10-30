@@ -45,8 +45,6 @@ class Lectures(Resource):
             urls = univis_lecture_c.get_urls(args=args)
             univis_data = univis_lecture_c.get_data(urls=urls)
             lectures = univis_lecture_c.get_lectures(univis_data=univis_data)
-            print(lectures)
-
 
             # lectures = list(set(lectures))
             if lectures:
@@ -60,6 +58,25 @@ class Lectures(Resource):
             if args[key]:
                 empty_params = False
         return empty_params
+
+
+@api.route(f'{API_V1_ROOT}lectures/<int:id>')
+class Lecture(Resource):
+    def get(self, id):
+        """
+        returns room by id (beta)
+        """
+        args = {"id": id}
+
+        univis_lecture_c = UnivISLectureController()
+        urls = univis_lecture_c.get_urls(args=args)
+        univis_data = univis_lecture_c.get_data(urls=urls)
+        lectures = univis_lecture_c.get_lectures(univis_data=univis_data)
+        if lectures:
+            return json.loads(json.dumps(lectures[0], default=lambda o: o.__dict__ if not isinstance(o, (
+                datetime.date, datetime.datetime)) else o.isoformat(), indent=4))
+        else:
+            return jsonify(status_code=400)
 
 
 @api.route(f'{API_V1_ROOT}rooms/<int:id>')
