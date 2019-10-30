@@ -3,9 +3,75 @@ from typing import List
 from flask_restplus import reqparse, inputs
 
 lectures_parser = reqparse.RequestParser()
-lectures_parser.add_argument('search_token', required=True,
+lectures_parser.add_argument('search_token',
                              type=str,
                              help='part of a lecture name')
+lectures_parser.add_argument('department',
+                             type=str,
+                             help='filter lectures by Name or UnivIS-org-number of the lectures department')
+lectures_parser.add_argument('chapter',
+                             type=str,
+                             help='filter lectures by the name of the lectures headline in the lecture directory')
+lectures_parser.add_argument('name',
+                             type=str,
+                             help='filter lectures by the long name of a lecture')
+lectures_parser.add_argument('short_name',
+                             type=str,
+                             help='filter lectures by the short name of a lecture')
+lectures_parser.add_argument('type',
+                             type=str,
+                             help='filter lectures by lecture type (like shorthand in the lecture directory)')
+lectures_parser.add_argument('number',
+                             type=int,
+                             help='filter lectures by the Document number of the business event (if available)')
+lectures_parser.add_argument('sws',
+                             type=int,
+                             help='filter lectures by semester hours per week')
+lectures_parser.add_argument('bonus_points',
+                             type=int,
+                             help='filter lectures by the amount of bonus points (equals)')
+lectures_parser.add_argument('malus_points',
+                             type=int,
+                             help='filter lectures by the amount of malus points (equals)')
+lectures_parser.add_argument('ects_credits',
+                             type=float,
+                             help='filter lectures by the amount of ects (equals)')
+lectures_parser.add_argument('lecturer',
+                             type=str,
+                             help='filter lectures by the lecturers name')
+lectures_parser.add_argument('room_short',
+                             type=str,
+                             help='filter lectures by the rooms short name')
+lectures_parser.add_argument('path',
+                             type=str,
+                             help='part of a lecture name')
+lectures_parser.add_argument('token',
+                             type=str,
+                             help='?')
+lectures_parser.add_argument('token_reg',
+                             type=str,
+                             help='?')
+lectures_parser.add_argument('token_attr',
+                             type=str,
+                             help='?')
+lectures_parser.add_argument('token_sem',
+                             type=str,
+                             help='?')
+lectures_parser.add_argument('evaluation',
+                             type=str,
+                             help='?')
+lectures_parser.add_argument('allocation',
+                             type=str,
+                             help='?')
+lectures_parser.add_argument('no_imports',
+                             type=bool,
+                             help='if true: show no imported lectures')
+lectures_parser.add_argument('no_subchap',
+                             type=bool,
+                             help='if true: show no lectures which titles are sub titles of the request')
+lectures_parser.add_argument('no_titles',
+                             type=bool,
+                             help='if true: show no lecture titles')
 
 rooms_parser = reqparse.RequestParser()
 rooms_parser.add_argument('token',

@@ -1,6 +1,3 @@
-from pprint import pprint
-
-
 class UnivISBase:
     def _get_orgunits(self, univis_data):
         if "orgunits" in univis_data:

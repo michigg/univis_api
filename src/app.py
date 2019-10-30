@@ -8,7 +8,7 @@ from flask_restplus import Api, Resource
 import parsers
 from config import PROD_MODE, CACHE_REDIS_URL, API_V1_ROOT
 from controllers.allocation_controller import UnivISAllocationController
-from controllers.controllers import UnivISLectureController
+from controllers.lecture_controller import UnivISLectureController
 from controllers.person_controller import UnivISPersonController
 from controllers.room_controller import UnivISRoomController
 from models.enums.building_key import CHOICES as BUILDING_KEY_CHOICES
@@ -38,15 +38,28 @@ class Lectures(Resource):
         """
         returns filtered univis lectures
         """
-        search_token = request.args.get('token', None)
-        if search_token:
-            univis_lecture_c = UnivISLectureController()
-            lectures = univis_lecture_c.get_lectures_by_token(search_token)
+        args = parsers.lectures_parser.parse_args()
+
+        univis_lecture_c = UnivISLectureController()
+        if not self.is_param_list_empty(args):
+            urls = univis_lecture_c.get_urls(args=args)
+            univis_data = univis_lecture_c.get_data(urls=urls)
+            lectures = univis_lecture_c.get_lectures(univis_data=univis_data)
+            print(lectures)
+
+
+            # lectures = list(set(lectures))
             if lectures:
-                return jsonify(json.dumps(lectures, default=lambda o: o.__dict__ if not isinstance(o, (
+                return json.loads(json.dumps(lectures, default=lambda o: o.__dict__ if not isinstance(o, (
                     datetime.date, datetime.datetime)) else o.isoformat(), indent=4))
-            return jsonify(status_code=204)
         return jsonify(status_code=400)
+
+    def is_param_list_empty(self, args):
+        empty_params = True
+        for key in args:
+            if args[key]:
+                empty_params = False
+        return empty_params
 
 
 @api.route(f'{API_V1_ROOT}rooms/<int:id>')
