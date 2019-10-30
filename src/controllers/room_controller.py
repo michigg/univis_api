@@ -66,7 +66,7 @@ class UnivISRoomController(UnivISController):
         return rooms
 
     def get_all_rooms_urls(self):
-        return [self.get_url({"token": key}) for key in UNIVIS_ROOM_KEYS]
+        return [self.get_urls({"token": key})[0] for key in UNIVIS_ROOM_KEYS]
 
     def _extract_room(self, univis_room: dict, persons_map: dict) -> UnivISRoom or None:
         return UnivISRoom(univis_room, persons_map) if self.is_a_room(univis_room) else None
