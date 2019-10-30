@@ -1,5 +1,8 @@
-class Allocation:
-    def __init__(self, univis_allocation: dict):
+from models.base import UnivISBase
+
+
+class UnivISAllocation(UnivISBase):
+    def __init__(self, univis_allocation: dict, rooms_map: dict, persons_map: dict):
         self.univis_key = univis_allocation.get('@key', None)
         self.title = univis_allocation.get('title', None)
         self.start_date = univis_allocation.get('startdate', None)
@@ -7,22 +10,20 @@ class Allocation:
         self.start_time = univis_allocation.get('starttime', None)
         self.end_time = univis_allocation.get('endtime', None)
         self.orgname = univis_allocation.get('orgname', None)
-        self.orgunits = self._init_orgunits(univis_allocation)
-        self.contact = None
-        self.room_ids = self._get_room_id(univis_allocation.get('rooms')) if univis_allocation.get('rooms',
-                                                                                                   None) else ''
-        self.rooms = []
+        self.orgunits = self._get_orgunits(univis_allocation)
 
-    def _get_room_id(self, rooms):
-        if 'UnivISRef' in rooms['room']:
-            return [rooms['room']['UnivISRef']['@key']]
-        else:
-            return [room['UnivISRef']['@key'] for room in rooms['room']]
+        raw_univis_contact = univis_allocation['contact'] if 'contact' in univis_allocation else None
+        self.contact = self._get_contacts(raw_univis_contact, persons_map)[0] if raw_univis_contact else None
 
-    def _init_orgunits(self, univis_room):
-        if len(univis_room['orgunits']) > 1:
-            return [orgunit for orgunit in univis_room['orgunits']['orgunit']]
-        return univis_room['orgunits']['orgunit']
+        raw_univis_rooms = univis_allocation['rooms']['room'] if 'rooms' in univis_allocation else None
+        self.rooms = self._get_rooms(raw_univis_rooms, rooms_map) if raw_univis_rooms else None
+
+    def _get_rooms(self, univis_rooms, rooms_map):
+        if type(univis_rooms) is list:
+            return [rooms_map[univis_room["UnivISRef"]['@key']] for univis_room in univis_rooms if
+                    univis_room["UnivISRef"]['@key'] in rooms_map]
+        return [rooms_map[univis_rooms["UnivISRef"]['@key']]] if univis_rooms["UnivISRef"][
+                                                                     '@key'] in rooms_map else []
 
     def __str__(self):
         return f'Allocation {self.title} {self.start_date}-{self.end_date}\n\tTime {self.start_time}\n\tTitle {self.end_time}'

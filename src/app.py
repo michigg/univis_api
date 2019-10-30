@@ -111,26 +111,24 @@ class Allocations(Resource):
         """
         returns filtered univis allocations (requires at least one param)
         """
-        args = parsers.persons_parser.parse_args()
+        args = parsers.allocations_parser.parse_args()
 
-        univis_person_c = UnivISPersonController()
+        univis_allocation_c = UnivISAllocationController()
         if not self.is_param_list_empty(args):
-            urls = univis_person_c.get_urls(args=args)
-            univis_data = univis_person_c.get_data(urls=urls)
-            persons = univis_person_c.get_persons(univis_data=univis_data)
-            persons = list(set(persons))
-            return json.loads(json.dumps(persons, default=lambda o: o.__dict__ if not isinstance(o, (
-                datetime.date, datetime.datetime)) else o.isoformat(), indent=4))
-        else:
-            return jsonify(status_code=400)
+            urls = univis_allocation_c.get_urls(args=args)
+            univis_data = univis_allocation_c.get_data(urls=urls)
+            allocations = univis_allocation_c.get_allocations(univis_data=univis_data)
+            if allocations:
+                return json.loads(json.dumps(allocations, default=lambda o: o.__dict__ if not isinstance(o, (
+                    datetime.date, datetime.datetime)) else o.isoformat(), indent=4))
+        return jsonify(status_code=400)
 
-        if start_date or end_date or start_time or end_time:
-            univis_alloc_c = UnivISAllocationController()
-            allocations = univis_alloc_c.get_filtered_allocations(start_date, end_date, start_time, end_time)
-            return jsonify(json.loads(json.dumps(allocations, default=lambda o: o.__dict__ if not isinstance(o, (
-                datetime.date, datetime.datetime)) else o.isoformat(), indent=4)))
-        else:
-            return jsonify(status_code=400)
+    def is_param_list_empty(self, args):
+        empty_params = True
+        for key in args:
+            if args[key]:
+                empty_params = False
+        return empty_params
 
 
 @api.route(f'{API_V1_ROOT}persons/')

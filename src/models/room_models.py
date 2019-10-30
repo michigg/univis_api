@@ -42,7 +42,6 @@ class UnivISRoom(Room, UnivISBase):
         self.orgname = univis_room.get('orgname', None)
         self.size = int(univis_room.get('size', -1))
         self.description = univis_room.get('description', None)
-        pprint(univis_room)
         raw_univis_contacts = univis_room['contacts']['contact'] if 'contacts' in univis_room else None
         self.contacts = self._get_contacts(raw_univis_contacts, persons_map) if raw_univis_contacts else None
         self.orgunits = self._get_orgunits(univis_room)
@@ -56,11 +55,6 @@ class UnivISRoom(Room, UnivISBase):
         level = int(splitted_room_number[0])
         number = int(splitted_room_number[1])
         return building_key, level, number
-
-    def _get_contacts(self, univis_contacts, persons_map):
-        if type(univis_contacts) is list:
-            return [persons_map[univis_contact["UnivISRef"]['@key']] for univis_contact in univis_contacts]
-        return [persons_map[univis_contacts["UnivISRef"]['@key']]]
 
     def _init_utils(self, univis_room):
         return [ROOM_UTIL_MAP[key] for key in ROOM_UTIL_MAP if key in univis_room]
