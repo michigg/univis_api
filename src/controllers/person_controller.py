@@ -14,7 +14,7 @@ class UnivISPersonController(UnivISController):
         UnivISController.__init__(self)
         self.univis_api_base_url = os.environ.get("UNIVIS_API_ENDPOINT")
 
-    def get_url(self, args) -> str:
+    def get_urls(self, args) -> List[str]:
         # TODO: lehrtyp, xjob, path
         params = {"search": "persons", "show": "xml"}
         if "id" in args and args["id"]:
@@ -30,32 +30,31 @@ class UnivISPersonController(UnivISController):
         if "title" in args and args["title"]:
             params['title'] = args["title"]
         print(f'{self.univis_api_base_url}?{urlencode(params, quote_via=quote_plus)}')
-        return f'{self.univis_api_base_url}?{urlencode(params, quote_via=quote_plus)}'
+        return [f'{self.univis_api_base_url}?{urlencode(params, quote_via=quote_plus)}']
 
-    def get_univis_data_persons(self, urls):
-        persons = []
+    def get_data(self, urls: List[str]) -> dict:
+        data = {}
         for url in urls:
             univis_data = self.load_page(url)
-            persons.extend(self._extract_persons(univis_data))
-        return persons
+            if not data:
+                data = univis_data
+            else:
+                data["UnivIS"]["Person"].extend(univis_data["UnivIS"]["Person"])
+        return data
 
-    def _extract_persons(self, univis_data: dict) -> List[UnivISPerson]:
-        univis_persons = self._get_univis_persons_from_univis_data(univis_data=univis_data)
-        persons = []
-        if type(univis_persons) is list:
-            for univis_person in univis_persons:
-                person = self._extract_person(univis_person)
-                if person:
-                    persons.append(person)
-        else:
-            person = self._extract_person(univis_persons)
-            persons.append(person)
-        return persons
-
-    def _extract_person(self, univis_person: dict) -> UnivISPerson or None:
-        return UnivISPerson(univis_person)
-
-    def _get_univis_persons_from_univis_data(self, univis_data: dict) -> List[dict] or None:
+    def get_persons(self, univis_data: dict) -> List[UnivISPerson]:
+        univis_persons = None
         if 'UnivIS' in univis_data:
-            return univis_data['UnivIS']['Person'] if 'Person' in univis_data['UnivIS'] else None
-        return None
+            univis_persons =  univis_data['UnivIS']['Person'] if 'Person' in univis_data['UnivIS'] else []
+        if univis_persons:
+            persons = []
+            if type(univis_persons) is list:
+                for univis_person in univis_persons:
+                    person = UnivISPerson(univis_person)
+                    if person:
+                        persons.append(person)
+            else:
+                person = UnivISPerson(univis_persons)
+                persons.append(person)
+            return persons
+        return []

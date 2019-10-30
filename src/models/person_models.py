@@ -1,3 +1,5 @@
+import os
+import re
 from typing import List
 
 from models.base import UnivISBase
@@ -49,8 +51,9 @@ class UnivISOfficeHour:
 
 class UnivISLocation(Room):
     def __init__(self, univis_room):
-        building_key, floor, number = self._init_room_number(univis_room)
-        Room.__init__(self, building_key, floor, number)
+        if "office" in univis_room:
+            building_key, floor, number = self._init_room_number(univis_room)
+            Room.__init__(self, building_key, floor, number)
         self.street = univis_room.get('street', None)
         self.phone = univis_room.get('tel', None)
         self.url = univis_room.get('url', None)
@@ -60,12 +63,20 @@ class UnivISLocation(Room):
 
     @staticmethod
     def _init_room_number(univis_room) -> (str, int, int):
-        splitted_room_id = str(univis_room['office']).split('/')
-        splitted_room_number = splitted_room_id[1].split('.')
-        building_key = splitted_room_id[0]
-        level = int(splitted_room_number[0])
-        number = int(splitted_room_number[1])
-        return building_key, level, number
+        building_key = univis_room["buildingkey"] if "buildingkey" in univis_room else None
+        floor = univis_room["floor"] if "floor" in univis_room else None
+        number = None
+
+        regex = os.environ.get("UNIVIS_ROOM_SHORT_REGEX")
+        pattern = re.compile(regex)
+        match = pattern.match(univis_room["office"])
+
+        if match:
+            building_key = match.group(1)
+            level = int(match.group(2))
+            number = match.group(3)
+            return building_key, level, number
+        return building_key, floor, number
 
     def __eq__(self, other):
         return self.building_key == other.building_key \

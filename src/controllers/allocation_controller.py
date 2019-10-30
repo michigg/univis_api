@@ -2,6 +2,8 @@ from typing import List
 from urllib.parse import urlencode, quote_plus
 
 from controllers.controllers import UnivISController
+from controllers.person_controller import UnivISPersonController
+from controllers.room_controller import UnivISRoomController
 from models.allocation_models import Allocation
 
 
@@ -21,11 +23,17 @@ class UnivISAllocationController(UnivISController):
         if end_time:
             params['endtime'] = end_time
         url = f'{self.univis_api_base_url}?{urlencode(params, quote_via=quote_plus)}'
+        print(url)
         return url
 
-    def get_allocations(self, data: dict) -> List[Allocation]:
-        rooms = self.get_rooms_from_data(data['UnivIS']['Room']) if 'Room' in data['UnivIS'] else []
-        allocations = self.get_allocations_from_data(data['UnivIS']['Allocation']) if 'Allocation' in data[
+    def extract_allocations(self, univis_data: dict) -> List[Allocation]:
+        univis_person_c = UnivISPersonController()
+        persons = univis_person_c.extract_persons(univis_data)
+        persons_map = self.get_univis_key_dict(persons)
+
+
+        rooms = univis_room_c._extract_rooms(univis_data)
+        allocations = self.get_allocations_from_data(univis_data['UnivIS']['Allocation']) if 'Allocation' in univis_data[
             'UnivIS'] else []
         rooms_dict = self.get_univis_key_dict(rooms)
 
@@ -38,4 +46,4 @@ class UnivISAllocationController(UnivISController):
 
     def get_filtered_allocations(self, start_date, end_date, start_time, end_time) -> List[Allocation]:
         data = self.load_page(self._get_univis_api_url(start_date, end_date, start_time, end_time))
-        return self.get_allocations(data) if data else []
+        return self.extract_allocations(data) if data else []

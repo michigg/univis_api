@@ -125,10 +125,10 @@ class Persons(Resource):
         args = parsers.persons_parser.parse_args()
 
         univis_person_c = UnivISPersonController()
-        urls = None if self.is_param_list_empty(args) else [univis_person_c.get_url(args=args)]
-
-        if urls:
-            persons = univis_person_c.get_univis_data_persons(urls=urls)
+        if not self.is_param_list_empty(args):
+            urls = univis_person_c.get_urls(args=args)
+            univis_data = univis_person_c.get_data(urls=urls)
+            persons = univis_person_c.get_persons(univis_data=univis_data)
             return json.loads(json.dumps(persons, default=lambda o: o.__dict__ if not isinstance(o, (
                 datetime.date, datetime.datetime)) else o.isoformat(), indent=4))
         else:
@@ -151,10 +151,12 @@ class Person(Resource):
         args = {"id": id}
 
         univis_person_c = UnivISPersonController()
-        url = univis_person_c.get_url(args=args)
-        univis_persons = univis_person_c.get_univis_data_persons([url])
-        if univis_persons:
-            return json.loads(json.dumps(univis_persons[0], default=lambda o: o.__dict__ if not isinstance(o, (
+        urls = univis_person_c.get_urls(args=args)
+        univis_data = univis_person_c.get_data(urls=urls)
+        persons = univis_person_c.get_persons(univis_data=univis_data)
+
+        if persons:
+            return json.loads(json.dumps(persons[0], default=lambda o: o.__dict__ if not isinstance(o, (
                 datetime.date, datetime.datetime)) else o.isoformat(), indent=4))
         else:
             return jsonify(status_code=400)

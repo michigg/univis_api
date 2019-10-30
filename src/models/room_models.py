@@ -8,8 +8,8 @@ from models.enums.room_util import ROOM_UTIL_MAP
 class Room:
     def __init__(self, building_key=None, floor=None, number=None):
         self.building_key = building_key
+        self.floor = int(floor) if floor else floor
         self.number = number
-        self.floor = int(floor)
 
     def get_number(self):
         """
