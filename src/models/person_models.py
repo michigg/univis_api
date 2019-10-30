@@ -37,6 +37,13 @@ class UnivISPerson(UnivISBase):
                     "office" in univis_location]
         return UnivISLocation(univis_person['locations']['location'])
 
+    def __eq__(self, other):
+        return self.id == other.id \
+               and self.univis_key == other.univis_key
+
+    def __hash__(self):
+        return hash(('id', self.id, 'univis_key', self.univis_key))
+
     def __str__(self):
         return f'Person {self.first_name} {self.last_name}\n\tUnivis Key {self.univis_key}\n\tTitle {self.title}\n\tGender {self.gender}'
 

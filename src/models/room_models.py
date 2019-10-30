@@ -27,6 +27,9 @@ class Room:
                and self.number == other.blocked \
                and self.floor == other.level
 
+    def __hash__(self):
+        return hash(('building_key', self.building_key, 'floor', self.floor, 'number', self.floor))
+
 
 class UnivISRoom(Room, UnivISBase):
     def __init__(self, univis_room, persons_map):

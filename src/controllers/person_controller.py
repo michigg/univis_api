@@ -32,20 +32,10 @@ class UnivISPersonController(UnivISController):
         print(f'{self.univis_api_base_url}?{urlencode(params, quote_via=quote_plus)}')
         return [f'{self.univis_api_base_url}?{urlencode(params, quote_via=quote_plus)}']
 
-    def get_data(self, urls: List[str]) -> dict:
-        data = {}
-        for url in urls:
-            univis_data = self.load_page(url)
-            if not data:
-                data = univis_data
-            else:
-                data["UnivIS"]["Person"].extend(univis_data["UnivIS"]["Person"])
-        return data
-
     def get_persons(self, univis_data: dict) -> List[UnivISPerson]:
         univis_persons = None
         if 'UnivIS' in univis_data:
-            univis_persons =  univis_data['UnivIS']['Person'] if 'Person' in univis_data['UnivIS'] else []
+            univis_persons = univis_data['UnivIS']['Person'] if 'Person' in univis_data['UnivIS'] else []
         if univis_persons:
             persons = []
             if type(univis_persons) is list:

@@ -59,9 +59,14 @@ class Room(Resource):
         args = {"id": id}
 
         univis_room_c = UnivISRoomController()
-        url = univis_room_c.get_url(args=args)
-        rooms = univis_room_c.get_univis_data_rooms([url])
-        return jsonify(rooms[0].__dict__) if rooms else jsonify(status_code=400)
+        urls = univis_room_c.get_urls(args=args)
+        univis_data = univis_room_c.get_data(urls=urls)
+        rooms = univis_room_c.get_rooms(univis_data=univis_data)
+        if rooms:
+            return json.loads(json.dumps(rooms[0], default=lambda o: o.__dict__ if not isinstance(o, (
+                datetime.date, datetime.datetime)) else o.isoformat(), indent=4))
+        else:
+            return jsonify(status_code=400)
 
 
 @api.route(f'{API_V1_ROOT}rooms/')
@@ -76,11 +81,18 @@ class Rooms(Resource):
         args = parsers.rooms_parser.parse_args()
 
         univis_room_c = UnivISRoomController()
-        urls = univis_room_c.get_all_rooms_urls() if self.is_param_list_empty(args) else [
-            univis_room_c.get_url(args=args)]
-        rooms = univis_room_c.get_univis_data_rooms(urls=urls)
-        return json.loads(json.dumps(rooms, default=lambda o: o.__dict__ if not isinstance(o, (
-            datetime.date, datetime.datetime)) else o.isoformat(), indent=4))
+        if self.is_param_list_empty(args):
+            urls = univis_room_c.get_all_rooms_urls()
+        else:
+            urls = univis_room_c.get_urls(args=args)
+        univis_data = univis_room_c.get_data(urls=urls)
+        rooms = univis_room_c.get_rooms(univis_data=univis_data)
+        rooms = list(set(rooms))
+        if rooms:
+            return json.loads(json.dumps(rooms, default=lambda o: o.__dict__ if not isinstance(o, (
+                datetime.date, datetime.datetime)) else o.isoformat(), indent=4))
+        else:
+            return jsonify(status_code=400)
 
     def is_param_list_empty(self, args):
         empty_params = True
@@ -99,10 +111,18 @@ class Allocations(Resource):
         """
         returns filtered univis allocations (requires at least one param)
         """
-        start_date = request.args.get('start_date', None)
-        end_date = request.args.get('end_date', None)
-        start_time = request.args.get('start_time', None)
-        end_time = request.args.get('end_time', None)
+        args = parsers.persons_parser.parse_args()
+
+        univis_person_c = UnivISPersonController()
+        if not self.is_param_list_empty(args):
+            urls = univis_person_c.get_urls(args=args)
+            univis_data = univis_person_c.get_data(urls=urls)
+            persons = univis_person_c.get_persons(univis_data=univis_data)
+            persons = list(set(persons))
+            return json.loads(json.dumps(persons, default=lambda o: o.__dict__ if not isinstance(o, (
+                datetime.date, datetime.datetime)) else o.isoformat(), indent=4))
+        else:
+            return jsonify(status_code=400)
 
         if start_date or end_date or start_time or end_time:
             univis_alloc_c = UnivISAllocationController()
@@ -129,6 +149,7 @@ class Persons(Resource):
             urls = univis_person_c.get_urls(args=args)
             univis_data = univis_person_c.get_data(urls=urls)
             persons = univis_person_c.get_persons(univis_data=univis_data)
+            persons = list(set(persons))
             return json.loads(json.dumps(persons, default=lambda o: o.__dict__ if not isinstance(o, (
                 datetime.date, datetime.datetime)) else o.isoformat(), indent=4))
         else:

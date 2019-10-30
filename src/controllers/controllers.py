@@ -46,6 +46,23 @@ class UnivISController:
             map[object.univis_key] = object
         return map
 
+    def get_data(self, urls: List[str]) -> dict:
+        data = {}
+        for url in urls:
+            univis_data = self.load_page(url)
+            if not data:
+                data = univis_data
+            else:
+                if "Person" in data["UnivIS"]:
+                    data["UnivIS"]["Person"].extend(univis_data["UnivIS"]["Person"])
+                if "Room" in data["UnivIS"]:
+                    data["UnivIS"]["Room"].extend(univis_data["UnivIS"]["Room"])
+                if "Allocation" in data["UnivIS"]:
+                    data["UnivIS"]["Allocation"].extend(univis_data["UnivIS"]["Allocation"])
+                if "Lecture" in data["UnivIS"]:
+                    data["UnivIS"]["Lecture"].extend(univis_data["UnivIS"]["Lecture"])
+        return data
+
     # def get_rooms_from_data(self, data: List):
     #     logger.error([self.is_a_room(room) for room in data])
     #     return [UnivISRoom(room) for room in data if self.is_a_room(room)]
