@@ -28,9 +28,6 @@ class UnivISController:
         except ExpatError:
             return None
 
-    # def get_persons(self, data: dict) -> List[UnvISPerson]:
-    #     return [UnvISPerson(person) for person in data['UnivIS']['Person'] if 'Person' in data['UnivIS']]
-
     def is_a_room(self, room: dict):
         try:
             if 'short' in room:
@@ -47,25 +44,41 @@ class UnivISController:
         return map
 
     def get_data(self, urls: List[str]) -> dict:
-        data = {}
+        data = {"UnivIS": {}}
         for url in urls:
             univis_data = self.load_page(url)
             if not data:
                 data = univis_data
             else:
-                if "Person" in data["UnivIS"]:
-                    data["UnivIS"]["Person"].extend(univis_data["UnivIS"]["Person"])
-                if "Room" in data["UnivIS"]:
-                    data["UnivIS"]["Room"].extend(univis_data["UnivIS"]["Room"])
-                if "Allocation" in data["UnivIS"]:
-                    data["UnivIS"]["Allocation"].extend(univis_data["UnivIS"]["Allocation"])
-                if "Lecture" in data["UnivIS"]:
-                    data["UnivIS"]["Lecture"].extend(univis_data["UnivIS"]["Lecture"])
+                if "Person" in univis_data["UnivIS"]:
+                    persons = univis_data["UnivIS"]["Person"] if type(
+                        univis_data["UnivIS"]["Person"]) == list else [univis_data["UnivIS"]["Person"]]
+                    if "Person" in data["UnivIS"]:
+                        data["UnivIS"]["Person"].extend(persons)
+                    else:
+                        data["UnivIS"]["Person"] = persons
+                if "Room" in univis_data["UnivIS"]:
+                    rooms = univis_data["UnivIS"]["Room"] if type(
+                        univis_data["UnivIS"]["Room"]) == list else [univis_data["UnivIS"]["Room"]]
+                    if "Room" in data["UnivIS"]:
+                        data["UnivIS"]["Room"].extend(rooms)
+                    else:
+                        data["UnivIS"]["Room"] = rooms
+                if "Allocation" in univis_data["UnivIS"]:
+                    allocations = univis_data["UnivIS"]["Allocation"] if type(
+                        univis_data["UnivIS"]["Allocation"]) == list else [univis_data["UnivIS"]["Allocation"]]
+                    if "Allocation" in data["UnivIS"]:
+                        data["UnivIS"]["Allocation"].extend(allocations)
+                    else:
+                        data["UnivIS"]["Allocation"] = allocations
+                if "Lecture" in univis_data["UnivIS"]:
+                    lectures = univis_data["UnivIS"]["Lecture"] if type(
+                        univis_data["UnivIS"]["Lecture"]) == list else [univis_data["UnivIS"]["Lecture"]]
+                    if "Allocation" in data["UnivIS"]:
+                        data["UnivIS"]["Lecture"].extend(lectures)
+                    else:
+                        data["UnivIS"]["Lecture"] = lectures
         return data
-
-    # def get_rooms_from_data(self, data: List):
-    #     logger.error([self.is_a_room(room) for room in data])
-    #     return [UnivISRoom(room) for room in data if self.is_a_room(room)]
 
 
 class UnivISLectureController(UnivISController):
