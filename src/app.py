@@ -138,7 +138,7 @@ class Persons(Resource):
     @api.doc(parser=parsers.persons_parser)
     def get(self):
         """
-        returns univis rooms
+        returns filtered univis persons
         """
         args = parsers.persons_parser.parse_args()
 
@@ -165,7 +165,7 @@ class Persons(Resource):
 class Person(Resource):
     def get(self, id):
         """
-        returns room by id (beta)
+        returns person by id (beta)
         """
         args = {"id": id}
 
