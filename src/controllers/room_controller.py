@@ -1,5 +1,4 @@
 import os
-from pprint import pprint
 from typing import List
 from urllib.parse import urlencode, quote_plus
 
@@ -35,13 +34,14 @@ class UnivISRoomController(UnivISController):
             if faculty_enum:
                 params['department'] = faculty_enum.value
         if "building_keys" in args and args["building_keys"]:
-            building_key_enums = [self.get_enum(BuildingKey, building_key) for building_key in args["building_keys"] if
+            building_keys = ["".join(arg) for arg in args["building_keys"]]
+            building_key_enums = [self.get_enum(BuildingKey, building_key) for building_key in building_keys if
                                   building_key]
             building_key_strings = [building_key.value for building_key in building_key_enums]
             for building_key_string in building_key_strings:
                 copied_params = params.copy()
                 copied_params["name"] = building_key_string
-                urls.append(f'{self.univis_api_base_url}?{urlencode(params, quote_via=quote_plus)}')
+                urls.append(f'{self.univis_api_base_url}?{urlencode(copied_params, quote_via=quote_plus)}')
             return urls
         return [f'{self.univis_api_base_url}?{urlencode(params, quote_via=quote_plus)}']
 

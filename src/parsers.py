@@ -25,8 +25,8 @@ rooms_parser.add_argument('faculty',
                           type=str,
                           help='rooms faculty univis name')
 rooms_parser.add_argument('building_keys',
-                          type=List[str],
-                          action='split',
+                          type=list,
+                          action='append',
                           help='rooms filtered by list of building_keys')
 
 allocations_parser = reqparse.RequestParser()

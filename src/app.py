@@ -1,6 +1,5 @@
 import datetime
 import json
-from pprint import pprint
 
 from flask import Flask, request, jsonify
 from flask_caching import Cache
